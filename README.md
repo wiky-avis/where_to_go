@@ -31,17 +31,17 @@ Python 3, Django 3, SQLite
     ```
     python manage.py migrate
     ```
-### Наполнение базы тестовыми данными
+## Наполнение базы тестовыми данными
     ```
     python manage.py load_place
     ```
-Запуск проекта.
+## Запуск проекта.
     ```
     python manage.py runserver
     ```
-Соднание суперпользователя
+## Соднание суперпользователя
     ```
     python manage.py createsuperuser
     ```
- Доступ в админку по ссылке http://127.0.0.1:8000/admin/
+### Доступ в админку по ссылке http://127.0.0.1:8000/admin/
 
