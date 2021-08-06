@@ -40,9 +40,7 @@ Python 3, Django 3, SQLite
     ```
     python manage.py runserver
     ```
-### Доступ в админку 
-
-    http://127.0.0.1:8000/admin/
+### Доступ в админку http://127.0.0.1:8000/admin/
     
 ## Дополнительные возможности:
 
