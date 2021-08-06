@@ -12,18 +12,19 @@ Python 3, Django 3, SQLite
 # Установка:
 Для запуска сайта вам понадобится Python третьей версии.
 
-### Склонируйте проект из реппозитория на GitHub
+### Склонируйте проект из реппозитория
     ```
     git clone https://github.com/wiky-avis/where_to_go.git
     ```
-### Установите виртуальное окружение, затем активируйте его
+### Установите виртуальное окружение
     ```
     python -m venv venv
     ```
+### Активируйте виртуальное окружение
     ```
     source venv/Scripts/activate
     ```
-### Установите все необходимые зависимости
+### Установите необходимые зависимости
     ```
     pip install -r requirements.txt
     ```
@@ -31,17 +32,22 @@ Python 3, Django 3, SQLite
     ```
     python manage.py migrate
     ```
+### Создайте суперпользователя
+    ```
+    python manage.py createsuperuser
+    ```
+### Запустите проект
+    ```
+    python manage.py runserver
+    ```
+### Доступ в админку 
+
+    http://127.0.0.1:8000/admin/
+    
+## Доплнительные возможности:
+
 ### Наполнение базы тестовыми данными
     ```
     python manage.py load_place
     ```
-### Запуск проекта.
-    ```
-    python manage.py runserver
-    ```
-### Соднание суперпользователя
-    ```
-    python manage.py createsuperuser
-    ```
-### Доступ в админку по ссылке http://127.0.0.1:8000/admin/
 
