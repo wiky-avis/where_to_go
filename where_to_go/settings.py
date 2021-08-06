@@ -9,9 +9,9 @@ env.read_env()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = env.str('SECRET_KEY')
+SECRET_KEY = env.str('SECRET_KEY', 'change_me_im_insecure_django-insecure-9@-xdh)!9ul&#a10clxas#owiu5v4(297s&+gmj$*9z3lclaa)')
 
-DEBUG = env.bool('DEBUG')
+DEBUG = env.bool('DEBUG', True)
 
 ALLOWED_HOSTS = []
 
