@@ -1,0 +1,29 @@
+{% load static %}
+<script id='app-template' type='text/template'>
+  <div v-bind:class='{"sidebar-content": 1, "bg-white": selectedPlace, "bg-secondary": !selectedPlace}'>
+    <div v-if='promptVisible' class='d-flex flex-column justify-content-center align-items-center' style='height: 100%;'>
+      <img class='d-block select-place-prompt mb-4' src='{% static "hand-pointer-regular.svg" %}' alt='Select place'>
+      <h4>Выберите место на карте</h4>
+    </div>
+
+    <div class='align-items-center justify-content-center d-flex' v-if='loading' style='height: 100%;'>
+      <div class='spinner-grow text-light' style='width: 3rem; height: 3rem;' role='status'>
+        <span class='sr-only'>Загрузка...</span>
+      </div>
+    </div>
+
+    <div class='place-description' v-if='selectedPlace'>
+
+      <img v-if='mainPhotoSrc' v-bind:src='mainPhotoSrc' class='d-block shadow mb-3 rounded' v-bind:alt='selectedPlace.title'>
+      {% verbatim %}
+      <h5 class='mb-3'>{{ selectedPlace.title }}</h5>
+
+      <p>{{ selectedPlace.short_description }}</p>
+      {% endverbatim %}
+
+      {% include 'includes/place_photos.html' %}
+
+      <div v-html='selectedPlace.long_description'></div>
+    </div>
+  </div>
+</script>

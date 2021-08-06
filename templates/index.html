@@ -1,0 +1,191 @@
+{% extends 'base.html' %} 
+{% load static %}
+{% block content %}
+  <div id='sidebar'>
+    <div id='sidebar-app'></div>
+  </div>
+
+  <div id='map'></div>
+
+  <script src='https://code.jquery.com/jquery-3.5.1.slim.min.js' integrity='sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj' crossorigin='anonymous'></script>
+  <script src='https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js' integrity='sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo' crossorigin='anonymous'></script>
+  <script src='https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js' integrity='sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI' crossorigin='anonymous'></script>
+
+  <script src='https://unpkg.com/leaflet@1.6.0/dist/leaflet.js' integrity='sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew==' crossorigin=''></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/leaflet-providers/1.10.1/leaflet-providers.min.js' integrity='sha256-EV/ywRtxUOBICwOsLtPpYEONoBF6g+ShAcLX1Ts48GA=' crossorigin='anonymous'></script>
+  <script src='https://unpkg.com/leaflet-control-custom@1.0.0/Leaflet.Control.Custom.js'></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/loglevel/1.6.8/loglevel.min.js' integrity='sha256-O/iFn3B3kEV/q5PPVW8TVpRhoywaK7NN4UjdnBO9DXo=' crossorigin='anonymous'></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.11/vue.min.js' integrity='sha256-ngFW3UnAN0Tnm76mDuu7uUtYEcG3G5H1+zioJw3t+68=' crossorigin='anonymous'></script>
+  <script src='https://unpkg.com/@ansur/leaflet-pulse-icon@0.1.1/dist/L.Icon.Pulse.js'></script>
+
+  <script src='{% static "leaflet-sidebar.js" %}'></script>
+
+  <script>
+    var map = L.map('map');
+    map.setView([55.753989, 37.623191], 11);
+
+    L.tileLayer.provider('OpenStreetMap.Mapnik').addTo(map);
+
+    var sidebar = L.control.sidebar('sidebar', {
+      closeButton: true,
+      position: 'right'
+    });
+    map.addControl(sidebar);
+
+    // FIXME should be hidden in production mode
+    L.control.custom({
+      position: 'bottomleft',
+      content: `
+        <label>
+            <input name='debug' type='checkbox' ${log.getLevel()<=1 && 'checked'}/>
+            Отладка
+        </label>`,
+      style: {
+        padding: '10px',
+        background: 'rgba(255, 255, 255, 0.7)',
+      },
+      events: {
+        click: event => {
+          if (event.target.name == 'debug'){
+            let level = event.target.checked && 'debug' || 'warn';
+            log.setLevel(level);
+            console.log(`Set log level: ${level}`)
+          }
+        },
+      }
+    }).addTo(map);
+
+    function loadJSON(elementId){
+      let element = document.getElementById(elementId);
+
+      if (!element){
+        log.error(`Not found element with id '${elementId}'.`)
+        return null;
+      }
+
+      return JSON.parse(element.textContent);
+    }
+
+    let places = loadJSON('places_geojson');
+    log.debug('Load GeoJSON for places', places);
+
+
+    L.geoJSON(places, {
+        pointToLayer: function(geoJsonPoint, latlng) {
+          if (geoJsonPoint.geometry.type != 'Point'){
+            return
+          }
+
+          let color = geoJsonPoint.properties.color || 'red';
+
+          var pulsingIcon = L.icon.pulse({
+            iconSize: [12, 12],
+            color: color,
+            fillColor: color,
+            heartbeat: 2.5,
+          });
+
+          let marker = L.marker(latlng, {
+            icon: pulsingIcon,
+            riseOnHover: true,
+          });
+
+          marker.bindTooltip(geoJsonPoint.properties.title);
+          marker.bindPopup(function (layer) {
+            return geoJsonPoint.properties.title;
+          })
+
+          marker.on('click', function(event){
+            log.debug('Feature selected', geoJsonPoint);
+            sidebar.show();
+            loadPlaceInfo(geoJsonPoint.properties.placeId, geoJsonPoint.properties.detailsUrl);
+          });
+          return marker;
+        }
+    }).addTo(map);
+
+    var sidebarApp = new Vue({
+      el: '#sidebar-app',
+      template: document.getElementById('app-template').innerHTML,
+      data: {
+        loadingPlaceId: null,
+        selectedPlace: null,  // object with attributes specified below
+          // title
+          // placeId
+          // imgs
+          // short_description
+          // long_description
+      },
+      computed: {
+        promptVisible: function () {
+          return !this.loading && !this.selectedPlace;
+        },
+        loading: function () {
+          return this.loadingPlaceId !== null;
+        },
+        mainPhotoSrc: function () {
+          if (!this.selectedPlace || !this.selectedPlace.imgs.length){
+            return null;
+          }
+          return this.selectedPlace.imgs[0];
+        },
+        carouselImgs: function () {
+          if (!this.selectedPlace || !this.selectedPlace.imgs.length){
+            return [];
+          }
+          return this.selectedPlace.imgs.slice(1);
+        },
+      },
+      updated: function () {
+        this.$nextTick(function () {
+          // Код, будет запущен только после обновления всех представлений
+          $('#place-photos').carousel();
+        })
+      },
+      methods: {
+        handlePhotosClick: function(slideId='next') {
+          // default event handlers of Bootstrap Carousel conflict with Leaflet
+          // so custom handler will mimic expected carousel behaviour
+          $('#place-photos').carousel(slideId);
+        }
+      },
+    });
+
+    map.on('click', function () {
+      sidebarApp.selectedPlace = null;
+      sidebarApp.loadingPlaceId = null;
+    })
+
+    async function loadPlaceInfo(placeId, detailsUrl){
+      sidebarApp.selectedPlace = null;
+      sidebarApp.loadingPlaceId = placeId;
+
+      try {
+        let response = await fetch(detailsUrl);
+
+        if (!response.ok){
+          return;
+        }
+
+        let data = await response.json();
+
+        if (sidebarApp.loadingPlaceId != placeId){
+          // Place loading was cancelled by user
+          return
+        }
+
+        sidebarApp.selectedPlace = {
+          title: data.title,
+          placeId: placeId,
+          imgs: data.imgs || [],
+          short_description: data.description_short,
+          long_description: data.description_long,
+        };
+      } finally {
+        if (sidebarApp.loadingPlaceId == placeId){
+          sidebarApp.loadingPlaceId = null;
+        }
+      }
+    }
+  </script>
+{% endblock %}

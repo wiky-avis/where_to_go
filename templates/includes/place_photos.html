@@ -1,0 +1,24 @@
+<div id='place-photos' class='carousel slide mb-3 shadow' data-ride='carousel' data-interval='5000'>
+  <ol class='carousel-indicators'>
+    <template v-for='(img, index) in carouselImgs' :key='img'>
+      <li v-on:click='handlePhotosClick(index)' v-bind:class='{active: index==0}'></li>
+    </template>
+  </ol>
+  <div class='carousel-inner'>
+    <template v-for='(img, index) in carouselImgs' :key='img'>
+      <div v-bind:class='{"carousel-item bg-light": 1, active: index==0}'>
+        <img v-bind:src='img' class='d-block w-100' v-bind:alt='selectedPlace.title'>
+      </div>
+    </template>
+  </div>
+  <template v-if='carouselImgs.length'>
+    <a class='carousel-control-prev' v-on:click='handlePhotosClick("prev")' role='button'>
+      <span class='carousel-control-prev-icon' aria-hidden='true'></span>
+      <span class='sr-only'>Следующая</span>
+    </a>
+    <a class='carousel-control-next' v-on:click='handlePhotosClick("next")' role='button'>
+      <span class='carousel-control-next-icon' aria-hidden='true'></span>
+      <span class='sr-only'>Предыдущая</span>
+    </a>
+  </template>
+</div>
